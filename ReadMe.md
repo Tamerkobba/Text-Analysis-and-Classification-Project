@@ -39,65 +39,7 @@ Our project delves into the synergy of machine learning and psychoanalysis, focu
 
 By leveraging advanced natural language processing, our goal is to build models capable of discerning linguistic patterns associated with Freudian principles. This interdisciplinary exploration aims to unveil connections between language and psychological frameworks, contributing not only to psychology but also to the broader discourse on culture and language. Join us on this intellectual journey where machine learning meets psychoanalysis to uncover hidden dimensions of human expression and thought.
 
-
-# NECESSARY IMPORTS
-```python
-import numpy as np
-import pandas as pd
-from sentence_transformers import SentenceTransformer, util
-from keras.models import Sequential, load_model
-from keras.layers import Dense
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import (
-    accuracy_score, 
-    precision_score, 
-    recall_score, 
-    f1_score, 
-    confusion_matrix, 
-    roc_curve, 
-    auc
-)
-import seaborn as sns
-import matplotlib.pyplot as plt
-```
 # DATA COLLECTION
-
-
-```python
-def clean_text(text):
-    cleaned_text = text.replace('\\', ' ').replace('\n', ' ')
-    return cleaned_text.strip()
-
-def extract_text_by_chapter(pdf_path):
-    chapters = {}
-    current_chapter = ""
-
-    for page_layout in extract_pages(pdf_path):
-        for element in page_layout:
-            if isinstance(element, LTTextContainer):
-                text = element.get_text().strip()
-                cleaned_text = clean_text(text) 
-                if cleaned_text.isupper() and len(cleaned_text.split()) > 1: 
-                    current_chapter = cleaned_text
-                    chapters[current_chapter] = []
-                elif current_chapter:
-                 
-                    sentences = re.split(r'(?<=[.!?]) +', cleaned_text)
-                    chapters[current_chapter].extend(sentences)
-
-    return chapters
-pdf_path =r"Sigmund-Freud-The-Complete-Works.pdf"
-chapters = extract_text_by_chapter(pdf_path)
-
-structured_data = {"Sentences": chapters}
-
-json_data = json.dumps(structured_data, indent=4)  
-
-
-with open('Uncleaned_text.json', 'w') as file:
-    file.write(json_data)
-
-```
 
 Initially, the content was scanned and read as a PDF document. Following this, the data underwent a transformation process, where it was structured and stored in a JSON (JavaScript Object Notation) file. This digital representation was meticulously organized to reflect the hierarchical structure of the original text.
 
@@ -181,86 +123,7 @@ It is noteworthy that for shorter works in Freud's collection, which lacked dist
 * "Studies on Hysteria" (1893-1895)
 
 
-```python
-with open("Cleaned_data.json") as file:
-    train_data = json.load(file)
-```
-```python
-dict_data = {
-    "sentence": [],
-    "class": []
-}
-```
-Here, an empty dictionary dict_data is initialized with two keys: "sentence" and "class". These keys will be used to store sentences and their associated class labels, respectively.
-
-
-```python
-for book, chapters in train_data.items():
-    for chapter, sentences in chapters.items():
-        for sentence in sentences:
-            dict_data["sentence"].append(sentence)
-            dict_data["class"].append(1)  
-
-train_df = pd.DataFrame(dict_data)
-print(train_df.head())
-train_df.to_csv("dataset.csv")
-```
-In this loop, the code iterates through each book and chapter in train_data. For every sentence found in each chapter, the sentence is appended to the dict_data["sentence"] list, and a corresponding class label '1' is appended to the dict_data["class"] list. This operation effectively flattens the hierarchical structure of the data into a format suitable for tabular analysis.
-
-
-```python
-
-def drop_rows_with_integer_in_first_column(csv_file):
-    df = pd.read_csv(csv_file)
-    first_column = df.iloc[:, 1]
-    def is_integer(value):
-        try:
-            int(value)
-            return True
-        except ValueError:
-            return False
-
-    non_integer_mask = ~first_column.apply(is_integer)
-    filtered_df = df[non_integer_mask]
-
-    return filtered_df
-
-filtered_df = drop_rows_with_integer_in_first_column("dataset.csv")
-
-```
-Further step of cleaning removing rows that have pure integer value in the column "Sentence"
-
-
-```python
-no_df = pd.read_csv("tweet_emotions.csv")
-
-no_df["class"] = 0
-
-no_df = no_df[["content", "class"]]
-
-no_df.rename(columns={'content': 'sentence'}, inplace=True)
-
-final_df = pd.concat([filtered_df, no_df]).reset_index(drop=True)
-
-final_df.to_csv("final_dataset.csv")
-```
 Finally we used a random dataset that we found on kaggle to ensure that our model, trained to identify sentences relevant to Freud's concepts  and maintains a high degree of accuracy and specificity. By introducing this heterogeneous set of sentences, we aimed to rigorously test and validate the model's capability to accurately distinguish between relevant and non-relevant content, thereby mitigating the risk of misclassification of contextually unrelated sentences as being associated with Freudian theories.
-
-
-# READING DATA
-
-```python
-df = pd.read_csv(r"Final_dataset.csv")
-df
-```
-|index|sentence|class|
-|---|---|---|
-|0|FRULEIN ANNA O\.|1|
-|1|\(Breuer\)|1|
-|2|At the time of her falling ill \(in 1880\) Frulein Anna O\.|1|
-|3|was twenty-one years old\.|1|
-|4|She may be regarded as  having had a moderately severe neuropathic heredity, since some psychoses had occurred among her  more distant relatives\.|1|
-|5|Her parents were normal in this respect\.|1|
 
 # Computing Raw Setnence Embeddings
 
@@ -268,10 +131,7 @@ df
 
 ### Generating Sentence Embeddings
 In the approach described, the `all-MiniLM-L6-v2` language model used for computing sentence embeddings with `SentenceBERT` was developed by the research team at Microsoft. This model is a part of the MiniLM series, which is known for providing high-quality language representations while being more efficient and compact compared to larger models
-```python
-sbert_encoder = SentenceTransformer('all-MiniLM-L6-v2')
-sbert_embeddings = sbert_encoder.encode(df["sentence"])
-```
+
 
 The `SentenceTransformer` model is initialized with the `all-MiniLM-L6-v2` model.
 We then encode the sentences present in the DataFrame df, under the column 'sentence'.
@@ -280,18 +140,14 @@ Finally, these embeddings are saved to a file named "embeddings_v0.npy" for futu
 
 ### Embeddings Shape
 Checking the shape of the embeddings array gives us insight into the dimensions of the dataset in the embedded space.
-```python
-sbert_embeddings.shape
-```
+
 > (93104, 384)
 
 The output (93104, 384) indicates the transformation of 93,104 sentences into a 384-dimensional embedding space. Each of these dimensions encapsulates complex semantic features of the sentences, now rendered in a numerical format suitable for NLP applications.
 
 ### Saving Sentence Embeddings
 The generated sentence embeddings are then saved for future use, as we can simply load them back instead of having to recompute them every time. 
-```python
-np.save("embeddings_v0.npy", sbert_embeddings)
-```
+
 
 
 ## Word2Vec
@@ -299,17 +155,10 @@ We employ the Word2Vec methodology, a widely recognized technique in the field o
 
 ### Preprocessing
 The initial stage involves preprocessing the data to make it suitable for training the Word2Vec model. This step includes tokenizing the sentences in our dataset. Tokenization is the process of breaking down text into smaller units, typically words. Each sentence in the dataset is split into a list of words, facilitating the subsequent training of the Word2Vec model.
-```python
-df['tokenized_sentences'] = df['sentence'].apply(lambda x: x.split()if not isinstance(x, float) else [] )
 
-data = df['tokenized_sentences'].tolist()
-```
 ### Training the Word2Vec model
 Once preprocessing is complete, we proceed to train the Word2Vec model on the tokenized data. The training process involves configuring several parameters that influence the model's performance and the quality of the word embeddings
-```python
-model = Word2Vec(data, window=5, min_count=1, workers=4)
-```
-<!-- jalal -->
+
 We pass the Word2Vec model:
 - `data` which is our corpus of sentences
 - `window` which refers to the "window" of words, as in the number of words before and after the target word that the model will use as context to learn the target
@@ -323,21 +172,6 @@ After training the Word2Vec model and extracting word embeddings, the next signi
 The sentence_embedding function outlined below is designed to generate a vector representation of a sentence. This function operates by first checking if the input is numerical (float or int), returning a zero vector in such cases to handle missing or non-textual data. For textual inputs, the function tokenizes the sentence into individual words, retrieves their corresponding embeddings from the trained Word2Vec model, and then computes the average of these word embeddings. This average vector serves as the embedding for the entire sentence.
 
 The dimensionality of each sentence embedding is set to 384, consistent with our model's configuration. If a sentence does not contain any words present in our Word2Vec vocabulary, a zero vector of size 384 is returned.
-
-```python
-def sentence_embedding(sentence):
-    # Check if the sentence is a float or int, and if so, return a zero vector
-    if isinstance(sentence, (float, int)):
-        return np.zeros(384)
-    words = sentence.split()
-    word_embeddings = [model.wv[word] for word in words if word in model.wv]
-    if len(word_embeddings) == 0:
-        return np.zeros(384)
-    # Averaging the word vectors to create a sentence vector
-    sentence_embedding = np.mean(word_embeddings, axis=0)
-    return sentence_embedding
-```
-
 # Previous Experiments
 
 In this section, we will discuss our initial experimentation with computing sentence similarity and basing our classification on that. This type of thinking, while it seemed interesting, did not yeild good enough results.
@@ -548,28 +382,6 @@ The decision to move away from the current model was made because it wasn't perf
 # Alignment Classification with Neural Networks
 We decided to take a different approach here, and treat the embedding space as tabular data, such that the number of dimensions is equivalent to the "number of columns" tabular data would have, ie. every dimension would be a feature.
 
-The final code and some models can be viewed on the github repository of this project: [link](https://github.com/Tamerkobba/Text-Analysis-and-Classification-Project)
-
-## Libraries Needed
-```python
-import numpy as np
-import pandas as pd
-from sentence_transformers import SentenceTransformer, util
-from keras.models import Sequential, load_model
-from keras.layers import Dense
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import (
-    accuracy_score, 
-    precision_score, 
-    recall_score, 
-    f1_score, 
-    confusion_matrix, 
-    roc_curve, 
-    auc
-)
-import seaborn as sns
-import matplotlib.pyplot as plt
-```
 
 First, we extract a list of the labels for each observation in our dataset. We also assume we have the embeddings ready from either `SBERT` or `word2vec` as a variable ```embeddings```
 ```py
@@ -621,33 +433,6 @@ For each model we trained, we kept track of most important classification metric
 - AUC
 
 We also computed the Confusion Matrices for the models to better understand the nature of the errors our models made.
-
-The code to do this is reported below:
-
-First, we use the model to predict on our test set, then we convery the probability outputs into binary classifications
-```py
-y_pred = model.predict(X_test)
-y_pred_bin = (y_pred > CLASSIFICATION_THRESHOLD).astype(int)
-```
-
-Then, we can use the following functions to get the all the metrics:
-```python
-accuracy = accuracy_score(y_test, y_pred_bin)
-precision = precision_score(y_test, y_pred_bin, average='macro')
-recall = recall_score(y_test, y_pred_bin, average='macro')
-f1 = f1_score(y_test, y_pred_bin, average='macro')
-conf_matrix = confusion_matrix(y_test, y_pred_bin)
-```
-
-Let's print these to see them:
-```python
-print('Accuracy: %.3f' % accuracy)
-print('Precision: %.3f' % precision)
-print('Recall: %.3f' % recall)
-print('F1 Score: %.3f' % f1)
-print('Confusion Matrix:')
-```
-
 
 Additionally, we use the following functions to create the confusion matrix and ROC curve:
 ```python
