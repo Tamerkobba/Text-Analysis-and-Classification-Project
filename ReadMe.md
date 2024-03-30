@@ -26,7 +26,6 @@
     - [One of the Models Used](#one-of-the-models-used)
     - [Results](#results)
 - [Alignment Classification with Neural Networks](#alignment-classification-with-neural-networks)
-  - [Libraries Needed](#libraries-needed)
     - [Architecture](#architecture)
     - [Training](#training)
     - [Evaluation \& Metrics](#evaluation--metrics)
@@ -453,29 +452,6 @@ The decision to move away from the current model was made because it wasn't perf
 
 # Alignment Classification with Neural Networks
 We decided to take a different approach here, and treat the embedding space as tabular data, such that the number of dimensions is equivalent to the "number of columns" tabular data would have, ie. every dimension would be a feature.
-
-The final code and some models can be viewed on the github repository of this project: [link](https://github.com/Tamerkobba/Text-Analysis-and-Classification-Project)
-
-## Libraries Needed
-```python
-import numpy as np
-import pandas as pd
-from sentence_transformers import SentenceTransformer, util
-from keras.models import Sequential, load_model
-from keras.layers import Dense
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import (
-    accuracy_score, 
-    precision_score, 
-    recall_score, 
-    f1_score, 
-    confusion_matrix, 
-    roc_curve, 
-    auc
-)
-import seaborn as sns
-import matplotlib.pyplot as plt
-```
 
 First, we extract a list of the labels for each observation in our dataset. We also assume we have the embeddings ready from either `SBERT` or `word2vec` as a variable ```embeddings```
 ```py
