@@ -471,9 +471,9 @@ Our best performing model was `nn_sbert_93k` with the following metrics:
 | --- | --- | --- | --- | --- |
 | 0.99 | 0.99 | 0.989 | 0.989 | 1.0 |
 
-![nn_sbert93k conf mat](image-2.png)
+![nn_sbert93k conf mat](Final Report/image-2.png)
 
-![nn_sbert_](image-3.png)
+![nn_sbert_](Final Report/image-3.png)
 
 Meanwhile, our worst performing model was `small_nn_w2v_9k` with the following metrics:
 
@@ -481,9 +481,9 @@ Meanwhile, our worst performing model was `small_nn_w2v_9k` with the following m
 | --- | --- | --- | --- | --- |
 | 0.93 | 0.93 | 0.928 | 0.929 | 0.98 |
 
-![small_nn_w2v_9k conf mat](image-4.png)
+![small_nn_w2v_9k conf mat](Final Report/image-4.png)
 
-![small_nn_w2v](image-5.png)
+![small_nn_w2v](Final Report/image-5.png)
 
 Here is the complete list of the configurations we ran for our models:
 ![Alt text](image-1.png)
