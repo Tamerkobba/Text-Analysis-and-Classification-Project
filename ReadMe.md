@@ -6,7 +6,6 @@
 - [DATA COLLECTION](#data-collection)
 - [DATA CLEANING](#data-cleaning)
   - [Books left after Cleaning:](#books-left-after-cleaning)
-- [READING DATA](#reading-data)
 - [Computing Raw Setnence Embeddings](#computing-raw-setnence-embeddings)
   - [SBERT with all-MiniLM-L6-v2](#sbert-with-all-minilm-l6-v2)
     - [Generating Sentence Embeddings](#generating-sentence-embeddings)
@@ -40,64 +39,8 @@ Our project delves into the synergy of machine learning and psychoanalysis, focu
 By leveraging advanced natural language processing, our goal is to build models capable of discerning linguistic patterns associated with Freudian principles. This interdisciplinary exploration aims to unveil connections between language and psychological frameworks, contributing not only to psychology but also to the broader discourse on culture and language. Join us on this intellectual journey where machine learning meets psychoanalysis to uncover hidden dimensions of human expression and thought.
 
 
-# NECESSARY IMPORTS
-```python
-import numpy as np
-import pandas as pd
-from sentence_transformers import SentenceTransformer, util
-from keras.models import Sequential, load_model
-from keras.layers import Dense
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import (
-    accuracy_score, 
-    precision_score, 
-    recall_score, 
-    f1_score, 
-    confusion_matrix, 
-    roc_curve, 
-    auc
-)
-import seaborn as sns
-import matplotlib.pyplot as plt
-```
+
 # DATA COLLECTION
-
-
-```python
-def clean_text(text):
-    cleaned_text = text.replace('\\', ' ').replace('\n', ' ')
-    return cleaned_text.strip()
-
-def extract_text_by_chapter(pdf_path):
-    chapters = {}
-    current_chapter = ""
-
-    for page_layout in extract_pages(pdf_path):
-        for element in page_layout:
-            if isinstance(element, LTTextContainer):
-                text = element.get_text().strip()
-                cleaned_text = clean_text(text) 
-                if cleaned_text.isupper() and len(cleaned_text.split()) > 1: 
-                    current_chapter = cleaned_text
-                    chapters[current_chapter] = []
-                elif current_chapter:
-                 
-                    sentences = re.split(r'(?<=[.!?]) +', cleaned_text)
-                    chapters[current_chapter].extend(sentences)
-
-    return chapters
-pdf_path =r"Sigmund-Freud-The-Complete-Works.pdf"
-chapters = extract_text_by_chapter(pdf_path)
-
-structured_data = {"Sentences": chapters}
-
-json_data = json.dumps(structured_data, indent=4)  
-
-
-with open('Uncleaned_text.json', 'w') as file:
-    file.write(json_data)
-
-```
 
 Initially, the content was scanned and read as a PDF document. Following this, the data underwent a transformation process, where it was structured and stored in a JSON (JavaScript Object Notation) file. This digital representation was meticulously organized to reflect the hierarchical structure of the original text.
 
@@ -247,31 +190,13 @@ final_df.to_csv("final_dataset.csv")
 Finally we used a random dataset that we found on kaggle to ensure that our model, trained to identify sentences relevant to Freud's concepts  and maintains a high degree of accuracy and specificity. By introducing this heterogeneous set of sentences, we aimed to rigorously test and validate the model's capability to accurately distinguish between relevant and non-relevant content, thereby mitigating the risk of misclassification of contextually unrelated sentences as being associated with Freudian theories.
 
 
-# READING DATA
-
-```python
-df = pd.read_csv(r"Final_dataset.csv")
-df
-```
-|index|sentence|class|
-|---|---|---|
-|0|FRULEIN ANNA O\.|1|
-|1|\(Breuer\)|1|
-|2|At the time of her falling ill \(in 1880\) Frulein Anna O\.|1|
-|3|was twenty-one years old\.|1|
-|4|She may be regarded as  having had a moderately severe neuropathic heredity, since some psychoses had occurred among her  more distant relatives\.|1|
-|5|Her parents were normal in this respect\.|1|
-
-# Computing Raw Setnence Embeddings
+# Computing Raw Sentence Embeddings
 
 ## SBERT with all-MiniLM-L6-v2
 
 ### Generating Sentence Embeddings
 In the approach described, the `all-MiniLM-L6-v2` language model used for computing sentence embeddings with `SentenceBERT` was developed by the research team at Microsoft. This model is a part of the MiniLM series, which is known for providing high-quality language representations while being more efficient and compact compared to larger models
-```python
-sbert_encoder = SentenceTransformer('all-MiniLM-L6-v2')
-sbert_embeddings = sbert_encoder.encode(df["sentence"])
-```
+
 
 The `SentenceTransformer` model is initialized with the `all-MiniLM-L6-v2` model.
 We then encode the sentences present in the DataFrame df, under the column 'sentence'.
@@ -299,17 +224,10 @@ We employ the Word2Vec methodology, a widely recognized technique in the field o
 
 ### Preprocessing
 The initial stage involves preprocessing the data to make it suitable for training the Word2Vec model. This step includes tokenizing the sentences in our dataset. Tokenization is the process of breaking down text into smaller units, typically words. Each sentence in the dataset is split into a list of words, facilitating the subsequent training of the Word2Vec model.
-```python
-df['tokenized_sentences'] = df['sentence'].apply(lambda x: x.split()if not isinstance(x, float) else [] )
 
-data = df['tokenized_sentences'].tolist()
-```
 ### Training the Word2Vec model
 Once preprocessing is complete, we proceed to train the Word2Vec model on the tokenized data. The training process involves configuring several parameters that influence the model's performance and the quality of the word embeddings
-```python
-model = Word2Vec(data, window=5, min_count=1, workers=4)
-```
-<!-- jalal -->
+
 We pass the Word2Vec model:
 - `data` which is our corpus of sentences
 - `window` which refers to the "window" of words, as in the number of words before and after the target word that the model will use as context to learn the target
@@ -324,19 +242,7 @@ The sentence_embedding function outlined below is designed to generate a vector 
 
 The dimensionality of each sentence embedding is set to 384, consistent with our model's configuration. If a sentence does not contain any words present in our Word2Vec vocabulary, a zero vector of size 384 is returned.
 
-```python
-def sentence_embedding(sentence):
-    # Check if the sentence is a float or int, and if so, return a zero vector
-    if isinstance(sentence, (float, int)):
-        return np.zeros(384)
-    words = sentence.split()
-    word_embeddings = [model.wv[word] for word in words if word in model.wv]
-    if len(word_embeddings) == 0:
-        return np.zeros(384)
-    # Averaging the word vectors to create a sentence vector
-    sentence_embedding = np.mean(word_embeddings, axis=0)
-    return sentence_embedding
-```
+
 
 # Previous Experiments
 
@@ -587,28 +493,16 @@ The Rectified Linear Unit and Sigmoid Functions, can be modeled by:
 $relu(x)=max(0,x)$  
 $sigmoid(x)=\frac{1}{1+e^{-x}}$  
 
-![Alt text](image.png)
-
-```py
-  model = Sequential()
-  model.add(Dense(128, input_dim=384, activation='relu'))
-  model.add(Dense(64, activation='relu'))
-  model.add(Dense(1, activation='sigmoid'))
-```
 
 The rest of the models work very similarly with all hidden layers employing the `relu` function as a activation function to add non-linearity and the final layer using `sigmoid` because we're doing binary classification (we would probably have  better results using `softmax` for multiclass classification for example)
 
-```py
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-```
+
 After that, we compile our model as is required by TensorFlow (the backend used by Keras in our case). In this step we can specify:
 - `binary_crossentropy`: the loss function that the model will use during training. This loss function is commonly used for binary classification problems where the output of the model is a probability distribution over two classes
 - `adam`: the optimization algorithm used to update the weights of the neural network during training. Adam is also the most popular algorithm in this field for neural networks
 - `accuracy`: metric used to evaluate the performance of the model
 ### Training 
-```py
-model.fit(X_train, y_train, epochs=10, batch_size=32)
-```
+
 Here, we train our models, all given the same data, and trained over `10` epochs with a batch size of `32`.
 
 We did not need more than 10 epochs as is evident by our high accuracy reported below, so we did not raise the number of epochs to avoid overfitting, but at the same time, we kept it this high so we can learn as much as possible.
@@ -622,62 +516,8 @@ For each model we trained, we kept track of most important classification metric
 
 We also computed the Confusion Matrices for the models to better understand the nature of the errors our models made.
 
-The code to do this is reported below:
 
-First, we use the model to predict on our test set, then we convery the probability outputs into binary classifications
-```py
-y_pred = model.predict(X_test)
-y_pred_bin = (y_pred > CLASSIFICATION_THRESHOLD).astype(int)
-```
-
-Then, we can use the following functions to get the all the metrics:
-```python
-accuracy = accuracy_score(y_test, y_pred_bin)
-precision = precision_score(y_test, y_pred_bin, average='macro')
-recall = recall_score(y_test, y_pred_bin, average='macro')
-f1 = f1_score(y_test, y_pred_bin, average='macro')
-conf_matrix = confusion_matrix(y_test, y_pred_bin)
-```
-
-Let's print these to see them:
-```python
-print('Accuracy: %.3f' % accuracy)
-print('Precision: %.3f' % precision)
-print('Recall: %.3f' % recall)
-print('F1 Score: %.3f' % f1)
-print('Confusion Matrix:')
-```
-
-
-Additionally, we use the following functions to create the confusion matrix and ROC curve:
-```python
-def draw_conf(conf_matrix):
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="magma", cbar=False,
-                xticklabels=['Predicted Negative', 'Predicted Positive'],
-                yticklabels=['Actual Negative', 'Actual Positive'])
-    plt.xlabel('Predicted Label')
-    plt.ylabel('True Label')
-    plt.title('Confusion Matrix')
-    plt.show()
-```
-
-```python
-def draw_roc(y_test, y_pred):
-    fpr, tpr, _ = roc_curve(y_test, y_pred)
-    roc_auc = auc(fpr, tpr)
-
-    plt.figure()
-    plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
-    plt.plot([0, 1], [0, 1], color='purple', lw=2, linestyle='--')
-    plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver Operating Characteristic')
-    plt.legend(loc="lower right")
-    plt.show()
-```
+First, we use the model to predict on our test set, then we convery the probability outputs into binary classifications and get the all the metrics
 
 ### Results Summary
 Our best performing model was `nn_sbert_93k` with the following metrics:
@@ -686,9 +526,9 @@ Our best performing model was `nn_sbert_93k` with the following metrics:
 | --- | --- | --- | --- | --- |
 | 0.99 | 0.99 | 0.989 | 0.989 | 1.0 |
 
-![nn_sbert93k conf mat](image-2.png)
+![nn_sbert93k conf mat](Images/image-2.png)
 
-![nn_sbert_](image-3.png)
+![nn_sbert_](Images/image-3.png)
 
 Meanwhile, our worst performing model was `small_nn_w2v_9k` with the following metrics:
 
@@ -696,10 +536,10 @@ Meanwhile, our worst performing model was `small_nn_w2v_9k` with the following m
 | --- | --- | --- | --- | --- |
 | 0.93 | 0.93 | 0.928 | 0.929 | 0.98 |
 
-![small_nn_w2v_9k conf mat](image-4.png)
+![small_nn_w2v_9k conf mat](Images/image-4.png)
 
-![small_nn_w2v](image-5.png)
+![small_nn_w2v](Images/image-5.png)
 
 Here is the complete list of the configurations we ran for our models:
-![Alt text](image-1.png)
+![Alt text](Images/image-1.png)
 In general, we see a trend where training models with the same architecture on SBERT embeddings yielded better results than those of `word2vec`, and we also see a direct positive relationship between the size of the training data and the average performance of the model.
